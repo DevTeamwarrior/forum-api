@@ -9,7 +9,7 @@
     "test": "vitest --run",
     "test:watch": "vitest run --coverage --watch",
     "migrate": "node-pg-migrate",
-    "migrate:test": "node-pg-migrate --envPath .test.env",
+    "migrate:test": "node-pg-migrate up --envPath .test.env",
     "lint": "eslint ."
   },
   "keywords": [],

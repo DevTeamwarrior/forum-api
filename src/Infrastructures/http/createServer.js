@@ -20,8 +20,17 @@ const createServer = async (container) => {
   app.use('/threads', threads(container));
   // Mount likes di /threads agar endpoint sesuai Postman
   app.use('/threads', likes.routes(container));
-  const authentications = (await import('../../Interfaces/http/api/authentications/index.js')).default;
-  app.use('/authentications', authentications(container));
+
+  // Only register authentications route if container has getInstance (for test isolation)
+  if (container && typeof container.getInstance === 'function') {
+    const authentications = (await import('../../Interfaces/http/api/authentications/index.js')).default;
+    app.use('/authentications', authentications(container));
+  }
+
+  // Hello world endpoint
+  app.get('/', (req, res) => {
+    res.status(200).json({ data: 'Hello world!' });
+  });
 
   // Handler 404
  

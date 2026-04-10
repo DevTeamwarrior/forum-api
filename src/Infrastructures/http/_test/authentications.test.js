@@ -154,7 +154,7 @@ describe('/authentications endpoint', () => {
     }
     if (!loginRes.body || !loginRes.body.data || !loginRes.body.data.refreshToken) {
       // Log response for debug
-      console.error('Login response:', loginRes.body);
+      // console.error('Login response:', loginRes.body);
       throw new Error('Login failed, cannot test refresh token');
     }
     const refreshToken = loginRes.body.data.refreshToken;

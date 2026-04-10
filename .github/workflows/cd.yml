@@ -1,0 +1,21 @@
+name: CD
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      # Contoh deploy ke Railway (ganti sesuai platform Anda)
+      - name: Install Railway CLI
+        run: npm install -g railway
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service forum-api
+
+      # Jika pakai platform lain (Render, Vercel, Heroku, dsb), ganti langkah di atas sesuai dokumentasi platform tersebut.
+      # Pastikan secret/token sudah diatur di GitHub repo Settings > Secrets.

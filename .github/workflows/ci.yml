@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser -d testdb" --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      PGHOST: localhost
+      PGUSER: testuser
+      PGPASSWORD: testpass
+      PGDATABASE: testdb
+      PGPORT: 5432
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm install
+      - run: npm run lint
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            nc -z localhost 5432 && echo "Postgres is up" && break
+            echo "Waiting for Postgres..."
+            sleep 3
+          done
+      - name: Run migration (jika ada)
+        run: |
+          if [ -f ./migrate.sh ]; then ./migrate.sh; fi
+      - run: npm test

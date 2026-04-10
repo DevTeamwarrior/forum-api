@@ -10,8 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       # Contoh deploy ke Railway (ganti sesuai platform Anda)
-      - name: Install Railway CLI
-        run: npm install -g railway
+      - name: Install Railway CLI (latest)
+        run: npm install -g @railway/cli
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

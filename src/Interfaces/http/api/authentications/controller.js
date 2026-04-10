@@ -12,7 +12,6 @@ class AuthenticationsController {
       const { accessToken, refreshToken } = await this._loginUserUseCase.execute({ username, password });
       res.status(201).json({ status: 'success', data: { accessToken, refreshToken } });
     } catch (err) {
-      console.error('[postAuthentication] Login error for username:', req.body.username, err);
       next(err);
     }
   }

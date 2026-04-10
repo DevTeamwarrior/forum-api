@@ -40,7 +40,6 @@ jobs:
             echo "Waiting for Postgres..."
             sleep 3
           done
-      - name: Run migration (jika ada)
-        run: |
-          if [ -f ./migrate.sh ]; then ./migrate.sh; fi
+      - name: Run DB migration
+        run: npm run migrate:test
       - run: npm test

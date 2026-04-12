@@ -6,10 +6,10 @@ import config from './Commons/exceptions/config.js';
  
 const start = async () => {
   const app = await createServer(container);
-  const { host, port } = config.app;
- 
-  app.listen(port, host, () => {
-    console.log(`server start at http://${host}:${port}`);
+  const { port } = config.app;
+
+  app.listen(port, () => {
+    console.log(`server start at port ${port}`);
   });
 };
  

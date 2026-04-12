@@ -54,6 +54,7 @@ const createServer = async (container) => {
   });
  
   app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+    console.error(err); // Log error detail ke console agar muncul di Railway log
     const translatedError = DomainErrorTranslator.translate(err);
     if (translatedError instanceof ClientError) {
       res.status(translatedError.statusCode).json({

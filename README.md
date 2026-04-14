@@ -41,10 +41,11 @@ Tambahkan badge berikut di bagian atas README (opsional):
 ### Continuous Deployment (CD)
 - Workflow CD otomatis berjalan pada setiap push ke branch utama (`main`/`master`).
 - CD akan menjalankan:
-	- Install Railway CLI (atau CLI platform lain)
-	- Deploy otomatis ke server (Railway/Render/Vercel/dsb)
+	- Install dependencies
+	- Build project (jika perlu)
+	- Deploy otomatis ke VPS (menggunakan SSH, rsync, dan PM2)
 - File workflow: `.github/workflows/cd.yml`
-- Pastikan secret/token deploy sudah diatur di GitHub repo Settings > Secrets (misal: `RAILWAY_TOKEN`).
+- Pastikan secret/token deploy (misal: `VPS_SSH_KEY`, `VPS_HOST`, `VPS_USER`) sudah diatur di GitHub repo Settings > Secrets.
 
 #### Contoh Badge Status
 Tambahkan badge berikut di bagian atas README (opsional):
@@ -57,49 +58,50 @@ Tambahkan badge berikut di bagian atas README (opsional):
 - Sertakan screenshot pipeline CI sukses & gagal, serta pipeline CD sukses, sesuai checklist reviewer.
 
 ### Cara Custom Deploy
-- Untuk platform lain (Render, Vercel, Heroku, dsb), ganti langkah deploy di `.github/workflows/cd.yml` sesuai dokumentasi platform.
+- Untuk platform lain (Railway, Render, Vercel, Heroku, dsb), ganti langkah deploy di `.github/workflows/cd.yml` sesuai dokumentasi platform.
 
 ### Dokumentasi Lengkap
 - Semua langkah CI/CD sudah terdokumentasi di README dan file workflow.
 
 ## Rate Limiting & HTTPS
-- Semua endpoint /threads dan turunannya dibatasi 90 request/menit per IP (express-rate-limit & NGINX).
-- Contoh implementasi express-rate-limit:
+Semua endpoint `/threads` dan turunannya dibatasi **90 request/menit per IP** menggunakan NGINX (tidak ada express-rate-limit di backend).
+Konfigurasi NGINX ada di file `nginx.conf` (lihat contoh di bawah).
+API hanya bisa diakses via HTTPS.
 
-```js
-// src/app.js
-import rateLimit from 'express-rate-limit';
-
-const threadsLimiter = rateLimit({
-	windowMs: 60 * 1000, // 1 menit
-	max: 90, // max 90 request per IP
-	message: { status: 'fail', message: 'Terlalu banyak request, coba lagi nanti.' },
-});
-
-app.use('/threads', threadsLimiter);
+### Contoh nginx.conf (production)
 ```
+limit_req_zone $binary_remote_addr zone=forumapilimit:10m rate=1.5r/s;
 
-- Konfigurasi NGINX ada di `nginx.conf` (lihat contoh di bawah).
-- API hanya bisa diakses via HTTPS.
+server {
+	listen 80;
+	server_name forumapizxc.cloud;
+	return 301 https://$host$request_uri;
+}
 
-### Contoh nginx.conf
-```
-http {
-	limit_req_zone $binary_remote_addr zone=threads:10m rate=90r/m;
-	server {
-		listen 443 ssl;
-		server_name forumapi.dcdg.xyz;
-		ssl_certificate /etc/letsencrypt/live/yourdomain/fullchain.pem;
-		ssl_certificate_key /etc/letsencrypt/live/yourdomain/privkey.pem;
+server {
+	listen 443 ssl;
+	server_name forumapizxc.cloud;
 
-		location /threads/ {
-			limit_req zone=threads burst=10 nodelay;
-			proxy_pass http://localhost:3000;
-			# ...proxy config lain...
-		}
+	ssl_certificate /etc/letsencrypt/live/forumapizxc.cloud/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/forumapizxc.cloud/privkey.pem;
+
+	location /threads {
+		limit_req zone=forumapilimit;
+		proxy_pass http://localhost:3000;
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+	}
+
+	location / {
+		proxy_pass http://localhost:3000;
 	}
 }
 ```
+
+**Catatan:**
+- Jika melakukan pengujian otomatis (Postman Runner), set delay minimal **700ms** antar request agar tidak diblokir oleh rate limiting NGINX.
 
 ## Environment Variable
 Lihat `.env.example` untuk daftar variable yang dibutuhkan.

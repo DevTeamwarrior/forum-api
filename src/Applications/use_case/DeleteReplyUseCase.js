@@ -4,6 +4,8 @@ class DeleteReplyUseCase {
   }
 
   async execute({ replyId, owner }) {
+    await this._replyRepository.verifyReplyOwner(replyId, owner);
+    await this._replyRepository.verifyReplyOwner(replyId, owner);
     await this._replyRepository.deleteReply(replyId, owner);
   }
 }
